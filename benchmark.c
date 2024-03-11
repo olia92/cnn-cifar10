@@ -26,6 +26,27 @@ void dump_volume(volume_t* v) {
     printf("\n");
 }
 
+void file_dump(volume_t* v) {
+
+    FILE *fp;
+    fp=fopen("image.txt","w");
+    if(fp==NULL){
+       printf("Error opening file!\n");
+        return; 
+    }
+
+    fprintf(fp,"%d,%d,%d\n", v->width, v->height, v->depth);
+     for (int z = 0; z < v->depth; z++){
+        for (int y = 0; y < v->height; y++) {
+             for (int x = 0; x < v->width; x++){
+                fprintf(fp,"%f ", volume_get(v, x, y, z));
+            }fprintf(fp, "\n");
+        }
+    }
+    
+    fclose(fp);
+}
+
 // Load the snapshot of the CNN we are going to run.
 network_t *load_cnn_snapshot() {
     network_t *net = make_network();
@@ -155,28 +176,29 @@ void run_classification(int *samples, int n, double ***keep_likelihoods) {
         input[i] = batches[samples[i] / 10000][samples[i] % 10000];
     }
 
-    double **likelihoods = (double **) malloc(sizeof(double *) * n);
-    for (int c = 0; c < n; c++) {
-        likelihoods[c] = (double *) malloc(sizeof(double) * NUM_CLASSES);
-    }
+    file_dump(input[0]);
+    // double **likelihoods = (double **) malloc(sizeof(double *) * n);
+    // for (int c = 0; c < n; c++) {
+    //     likelihoods[c] = (double *) malloc(sizeof(double) * NUM_CLASSES);
+    // }
 
-    printf("Running classification...\n");
-    net_classify(net, input, likelihoods, n);
+    // printf("Running classification...\n");
+    // net_classify(net, input, likelihoods, n);
 
-    int predictions[n];
-    for (int i = 0; i < n; i++) {
-        int best_class = -1;
-        double max_likelihood = -INFINITY;
-        for (int c = 0; c < NUM_CLASSES; c++) {
-            if (max_likelihood < likelihoods[i][c]) {
-                max_likelihood = likelihoods[i][c];
-                best_class = c;
-            }
-        }
-        predictions[i] = best_class;
-    }
+    // int predictions[n];
+    // for (int i = 0; i < n; i++) {
+    //     int best_class = -1;
+    //     double max_likelihood = -INFINITY;
+    //     for (int c = 0; c < NUM_CLASSES; c++) {
+    //         if (max_likelihood < likelihoods[i][c]) {
+    //             max_likelihood = likelihoods[i][c];
+    //             best_class = c;
+    //         }
+    //     }
+    //     predictions[i] = best_class;
+    // }
 
-    printf("%lf%% accuracy\n", 100 * get_accuracy(samples, predictions, n));
+    // printf("%lf%% accuracy\n", 100 * get_accuracy(samples, predictions, n));
 
     free_network(net);
     free(input);
@@ -190,14 +212,14 @@ void run_classification(int *samples, int n, double ***keep_likelihoods) {
         }
     }
 
-    if (keep_likelihoods == NULL) {
-        for (int i = 0; i < n; i++) {
-            free(likelihoods[i]);
-        }
-        free(likelihoods);
-    } else {
-        *keep_likelihoods = likelihoods;
-    }
+    // if (keep_likelihoods == NULL) {
+    //     for (int i = 0; i < n; i++) {
+    //         free(likelihoods[i]);
+    //     }
+    //     free(likelihoods);
+    // } else {
+    //     *keep_likelihoods = likelihoods;
+    // }
 }
 
 // Run benchmark on a specified number samples (if there is none, then
